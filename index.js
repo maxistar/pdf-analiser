@@ -1,9 +1,8 @@
 import fs from 'fs/promises';
 import path from 'path';
-// import { PDFDocument } from 'pdf-lib'; // To manipulate PDF files
-// import express from '@pdftron/pdfjs-express'; // To extract text from PDF
 import extract from 'pdf-text-extract'; // To extract text from PDF
-
+import OpenAI from "openai";
+const openai = new OpenAI();
 
 
 
@@ -87,14 +86,21 @@ async function generateCSV() {
                 // Send the content to ChatGPT and get the response
                 const gptResponse = await processPdfWithChatGPT(pdfContent);
                 
+                const info = parseOutput(gptResponse);
+                
+                const name = info["ФИО"];
+                const title = info["профессия"];
+                const experience = info["годаОпыта"];
+                const industry = info["индустрия"];
+                
                 console.log(gptResponse);
                 
-                return `${file},${stats.size}`;
+                return `${file},${stats.size},"${name}","${title}","${experience}","${industry}"`;
             })
         ); 
 
         // Write to CSV
-        const csvContent = 'File Name,Size (bytes)\n' + fileDetails.join('\n');
+        const csvContent = 'File Name,Size (bytes),name,title,experience,industry\n' + fileDetails.join('\n');
         await fs.writeFile(outputFilePath, csvContent, 'utf8');
 
         console.log(`CSV file created: ${outputFilePath}`);
